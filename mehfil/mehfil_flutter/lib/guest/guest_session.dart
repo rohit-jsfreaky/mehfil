@@ -37,8 +37,10 @@ class GuestSession extends ChangeNotifier {
   Duration _backoff = const Duration(seconds: 2);
   DateTime _nextAttempt = DateTime.fromMillisecondsSinceEpoch(0);
 
-  /// Last thing we know about the network: true after any server reply.
-  bool online = false;
+  /// Last thing we know about the network: false only after a request
+  /// failed, true again after any server reply. "No signal" is shown only
+  /// when there is evidence for it, not while the first reply is on its way.
+  bool online = true;
 
   /// Photos saved on this phone and not yet confirmed by the server.
   int waiting = 0;
@@ -75,16 +77,45 @@ class GuestSession extends ChangeNotifier {
 
   /// The saved join for [code] on this device, if the guest joined before.
   static Future<JoinResult?> saved(String code) async {
+    final join = await _savedJoin(code);
+    if (join == null) return null;
+    final signedIn = client.auth.authInfo?.authUserId;
+    if (signedIn == join.guest.authUserId) return join;
+    // Someone else is signed in on this browser (a host, say).
+    if (signedIn != null) return null;
+    // This phone's session was lost (a token refresh cut short when the tab
+    // went to the background). Get the same guest back with the recovery key,
+    // so the photos waiting on the phone still go out under this name.
+    if (join.recoveryKey == null) return null;
+    try {
+      await _recover(join);
+    } on MehfilException {
+      return null; // The server said no: join again from the QR.
+    } catch (_) {
+      // No signal. Open anyway; the session recovers once back online.
+    }
+    return join;
+  }
+
+  static Future<JoinResult?> _savedJoin(String code) async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_key(code));
-    if (raw == null || !client.auth.isAuthenticated) return null;
+    if (raw == null) return null;
     try {
-      final join = JoinResult.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-      final signedIn = client.auth.authInfo?.authUserId;
-      return join.guest.authUserId == signedIn ? join : null;
+      return JoinResult.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (_) {
       return null;
     }
+  }
+
+  /// Signs this phone back in as the guest in [join].
+  static Future<void> _recover(JoinResult join) async {
+    final ok = await client.guest.recover(
+      join.event.joinCode,
+      join.guest.id!,
+      join.recoveryKey!,
+    );
+    await client.auth.updateSignedInUser(ok);
   }
 
   /// First visit: sign in with the QR's code, then join under [name].
@@ -93,7 +124,12 @@ class GuestSession extends ChangeNotifier {
       final ok = await client.anonymousIdp.login(token: code);
       await client.auth.updateSignedInUser(ok);
     }
-    final join = await client.guest.join(code, name);
+    var join = await client.guest.join(code, name);
+    // The server sends the recovery key only once: keep the one we have.
+    final before = await _savedJoin(code);
+    if (join.recoveryKey == null && before?.guest.id == join.guest.id) {
+      join = join.copyWith(recoveryKey: before?.recoveryKey);
+    }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key(code), jsonEncode(join.toJson()));
     return join;
@@ -122,14 +158,53 @@ class GuestSession extends ChangeNotifier {
   }
 
   void _start() {
+    client.auth.authInfoListenable.addListener(_onAuthChanged);
     _startSync();
     _watchWall();
     unawaited(_reconcile());
     _ticker = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!client.auth.isAuthenticated) unawaited(_recoverSession());
       if (waiting > 0) unawaited(pump());
       if (_wall == null) _watchWall();
     });
     unawaited(pump());
+  }
+
+  // ---------------------------------------------------------------- session
+
+  bool _recovering = false;
+
+  void _onAuthChanged() {
+    if (!client.auth.isAuthenticated) unawaited(_recoverSession());
+  }
+
+  /// Gets this guest signed back in after the session was lost, without a
+  /// new name or a new account. Photos keep waiting safely meanwhile.
+  Future<void> _recoverSession() async {
+    if (_recovering || _closed || client.auth.isAuthenticated) return;
+    if (_join.recoveryKey == null) return;
+    _recovering = true;
+    try {
+      await _recover(_join);
+      _markOnline();
+      if (_wall == null) _watchWall();
+      unawaited(_reconcile());
+      unawaited(pump());
+    } on MehfilException catch (e) {
+      lastError = e.message;
+      notifyListeners();
+    } catch (_) {
+      _markOffline();
+    } finally {
+      _recovering = false;
+    }
+  }
+
+  /// The server answered "please sign in": the session on this phone is dead
+  /// even if it still looks signed in. Drop it and recover.
+  Future<void> _sessionLost() async {
+    if (client.auth.isAuthenticated) await client.auth.updateSignedInUser(null);
+    await _recoverSession();
   }
 
   // ---------------------------------------------------------------- capture
@@ -211,6 +286,11 @@ class GuestSession extends ChangeNotifier {
           await _refreshCounts();
         } on MehfilException catch (e) {
           _markOnline();
+          if (e.code == 'signed_out') {
+            await _sessionLost();
+            if (!client.auth.isAuthenticated) break;
+            continue;
+          }
           if (e.code == 'not_joined') {
             await client.guest.join(joinCode, guest.name);
             continue;
@@ -253,6 +333,9 @@ class GuestSession extends ChangeNotifier {
         where: (t) => t.shotId.inSet(have),
       );
       await _refreshCounts();
+    } on MehfilException catch (e) {
+      _markOnline();
+      if (e.code == 'signed_out') unawaited(_sessionLost());
     } catch (_) {
       _markOffline();
     }
@@ -377,6 +460,7 @@ class GuestSession extends ChangeNotifier {
   @override
   void dispose() {
     _closed = true;
+    client.auth.authInfoListenable.removeListener(_onAuthChanged);
     _ticker?.cancel();
     unawaited(_wall?.cancel());
     unawaited(_sync?.cancel());

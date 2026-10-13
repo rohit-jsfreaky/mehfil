@@ -15,6 +15,23 @@ abstract final class Access {
     return id;
   }
 
+  /// The signed-in host. Hosts sign in with email; a guest's anonymous
+  /// session from a QR code can shoot and view, but never create an event.
+  static Future<UuidValue> hostId(Session session) async {
+    final id = userId(session);
+    final account = await EmailAccount.db.findFirstRow(
+      session,
+      where: (t) => t.authUserId.equals(id),
+    );
+    if (account == null) {
+      throw MehfilException(
+        code: 'not_host',
+        message: 'Sign in as a host to create an event.',
+      );
+    }
+    return id;
+  }
+
   static Future<Event> eventByCode(Session session, String joinCode) async {
     final event = await Event.db.findFirstRow(
       session,

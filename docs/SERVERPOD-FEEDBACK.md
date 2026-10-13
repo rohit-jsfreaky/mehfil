@@ -79,12 +79,51 @@ Format for each note:
   class (`host`, `close`, `caller`, ...), the same way it validates model names.
 - **Workaround** — renamed it to `EventsEndpoint` (`client.events`).
 
-### 5. (Unconfirmed) a host was signed out after several tabs opened
-- **Date / version** — 13 Oct 2026 · serverpod_auth_idp_flutter 4.1.0-beta.3 · JWT · Flutter web
-- **What happened** — once, after a host opened two more tabs of the app (live wall, judge page) and ran the judge
-  page, the host tab came back signed out. Each tab called `client.auth.initialize()`, which forces a refresh of a
-  rotating refresh token, so concurrent refreshes were our first suspect.
-- **Status** — NOT reproduced afterwards (sequential tabs and three tabs loading at the same moment both stayed signed
-  in, with `restore()` at start-up). Could have been our test timing. Kept as an observation, not a bug report.
-- **What we changed anyway** — `client.auth.restore()` at start-up instead of `initialize()`; refresh happens lazily.
-- **Question for the team** — is concurrent `refreshAuthKey(force: true)` from several tabs safe with JWT rotation?
+### 5. A refresh cut short signs the user out for good (seen on Serverpod Cloud, Flutter web)
+- **Date / version** — 13 Oct 2026 · serverpod_auth_core 4.1.0-beta.3 · JWT · Flutter web
+- **What happened** — first seen once on a host tab (several tabs open), then reproduced on Serverpod Cloud with a guest:
+  two quick reloads while the access token was expiring. The next refresh was refused —
+  server log: `refreshAccessToken error=RefreshTokenInvalidSecretException` — the client signed the device out, and
+  every call after that failed with "Please sign in" (our app then showed "No signal", which was wrong).
+- **Why** — the refresh secret is single-use (rotating). If the page goes away after the server rotated it but before
+  the new one is saved (a reload, a closed tab, a phone freezing a background tab), the saved secret is stale forever.
+  The client source says as much: "an uncoordinated concurrent refresh from another tab may be treated as credential
+  reuse and revoke the session".
+- **What I expected** — a short grace window in which the previous refresh secret is still accepted once (common in
+  rotating-token designs), or a documented recovery path. For an anonymous account there is no way back in as the same
+  user, so the user loses their identity (for us: whose photos are whose).
+- **Workaround** — Mehfil gives each guest a recovery key at join (the server stores only its SHA-256). When the
+  session is lost, the phone calls `guest.recover(code, guestId, key)` and the server issues a new token for the same
+  auth user with `AuthServices.instance.tokenManager.issueToken`. Verified on Cloud: session deleted → reload →
+  `/guest/recover` 200 → the same guest's next photo delivered (row + file), no duplicate guest.
+- **Suggestion** — a grace window for the previous refresh secret, and a doc section on recovering anonymous users.
+
+### 6. A hand-written `.scloudignore` at the workspace root breaks Cloud builds with "bin/main.dart not found"
+- **Date / version** — 13 Oct 2026 · Serverpod CLI 4.1.0-beta.3 (`serverpod cloud deploy`) · Dart workspace from `serverpod quickstart`
+- **What happened** — I created `.scloudignore` myself (to ship the git-ignored `mehfil_server/web/app/`). The upload
+  worked, then the Cloud build failed: `SERVER_DIR: .` … `RUN dart build cli -t bin/main.dart` →
+  `"/app/bin/main.dart" file not found.` The server lives in `mehfil_server/`.
+- **Why** — the CLI writes the server's folder to `.scloud/scloud_server_dir`, but every dot-folder is ignored unless
+  opted back in. Only the CLI's own `.scloudignore` template opts it back in (`!.scloud/**`), and the CLI writes that
+  template **only if no `.scloudignore` exists** (`ScloudIgnore.writeTemplateIfNotExists`). So any hand-written file
+  silently drops `.scloud/` from the zip. `--wet-run --show-files` does show `.scloud (ignored)`, but nothing says it is
+  required.
+- **What I expected** — the CLI always includes the `.scloud/` files it generated itself, whatever the ignore files say
+  (or the deploy refuses with "`.scloud/` is ignored, add `!.scloud/**`").
+- **Workaround** — deleted my file, let the CLI write its template, then appended our lines to it.
+- **Cost** — one failed build (~95 s) and ~20 minutes reading the CLI source (`prepare_project_files.dart`,
+  `scloudignore.dart`) to find the cause.
+
+### 7. On Serverpod Cloud's free Starter plan, every future-call method throws `Bad state: FutureCalls is not initialized.`
+- **Date / version** — 13 Oct 2026 · Serverpod 4.1.0-beta.3 · Serverpod Cloud, Starter trial (future calls are a Growth feature)
+- **What happened** — the same code that passes locally failed on Cloud. `futureCalls.callAtTime(...)` while creating an
+  event, and `futureCalls.cancel(identifier)` in "Reveal now", both threw
+  `Bad state: FutureCalls is not initialized.` from the generated `future_calls.dart`, and the endpoint returned HTTP 500.
+- **What I expected** — a clear, typed error that names the cause (for example "Future calls are disabled on this Cloud
+  plan"), and `cancel` of a call that can't exist being a no-op. The pricing page lists the limit, but nothing at
+  runtime or in `serverpod cloud deploy` warns that the deployed code uses a disabled feature.
+- **Workaround** — Mehfil wraps both calls (`RevealService.schedule` / `unschedule`) and adds a "reveal clock": every
+  10 s the server opens any roll whose reveal time passed more than 45 s ago, using the same exactly-once reveal. Where
+  future calls run, the future call fires first and the clock finds nothing to do.
+- **Suggestion** — a typed `FutureCallsDisabledException`, and a deploy-time hint when the generated code contains future
+  calls but the plan disables them.

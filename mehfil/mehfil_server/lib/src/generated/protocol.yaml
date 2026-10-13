@@ -27,6 +27,7 @@ guest:
   - now:
   - event:
   - join:
+  - recover:
   - delivered:
 judge:
   - hiddenSample:

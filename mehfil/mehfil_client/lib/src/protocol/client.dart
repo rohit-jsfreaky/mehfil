@@ -447,6 +447,23 @@ class EndpointGuest extends _isc.EndpointRef {
     },
   );
 
+  /// Gets a guest whose session was lost back in, as the same person: same
+  /// account, same queued photos, same name on the album. The phone proves it
+  /// is that guest with the recovery key it got when it first joined.
+  _ida.Future<_iacc.AuthSuccess> recover(
+    String joinCode,
+    int guestId,
+    String recoveryKey,
+  ) => caller.callServerEndpoint<_iacc.AuthSuccess>(
+    'guest',
+    'recover',
+    {
+      'joinCode': joinCode,
+      'guestId': guestId,
+      'recoveryKey': recoveryKey,
+    },
+  );
+
   /// The shot ids the server already has from this guest. The phone uses it
   /// to clear its queue after a reinstall or a lost reply.
   _ida.Future<List<_isc.UuidValue>> delivered(int eventId) =>

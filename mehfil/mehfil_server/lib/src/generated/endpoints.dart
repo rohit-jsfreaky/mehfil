@@ -606,6 +606,37 @@ class Endpoints extends _is.EndpointDispatch {
                 params['name'],
               ),
         ),
+        'recover': _is.MethodConnector(
+          name: 'recover',
+          params: {
+            'joinCode': _is.ParameterDescription(
+              name: 'joinCode',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'guestId': _is.ParameterDescription(
+              name: 'guestId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'recoveryKey': _is.ParameterDescription(
+              name: 'recoveryKey',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['guest'] as _ir9fyn4w.GuestEndpoint).recover(
+                    session,
+                    params['joinCode'],
+                    params['guestId'],
+                    params['recoveryKey'],
+                  ),
+        ),
         'delivered': _is.MethodConnector(
           name: 'delivered',
           params: {

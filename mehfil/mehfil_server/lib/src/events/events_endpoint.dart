@@ -4,7 +4,6 @@ import 'package:serverpod/serverpod.dart';
 import 'package:serverpod_offline_sync_server/serverpod_offline_sync_server.dart';
 
 import '../core/access.dart';
-import '../generated/future_calls.dart';
 import '../generated/protocol.dart';
 import '../reveal/reveal_service.dart';
 import '../shots/shot_endpoint.dart';
@@ -25,7 +24,7 @@ class EventsEndpoint extends Endpoint {
     bool isDemo = false,
     String? hostedBy,
   }) async {
-    final host = Access.userId(session);
+    final host = await Access.hostId(session);
     final cleanName = name.trim();
     if (cleanName.isEmpty || rolls.isEmpty) {
       throw MehfilException(
@@ -44,7 +43,9 @@ class EventsEndpoint extends Endpoint {
         session,
         Event(
           name: cleanName,
-          hostedBy: (hostedBy?.trim().isEmpty ?? true) ? null : hostedBy!.trim(),
+          hostedBy: (hostedBy?.trim().isEmpty ?? true)
+              ? null
+              : hostedBy!.trim(),
           joinCode: await _freshCode(session, tx),
           hostUserId: host,
           albumSpaceId: albumSpace,
@@ -139,9 +140,7 @@ class EventsEndpoint extends Endpoint {
   Future<Roll> revealNow(Session session, int rollId) async {
     final roll = await Access.roll(session, rollId);
     await Access.hostedEvent(session, roll.eventId);
-    await session.serverpod.futureCalls.cancel(
-      RevealService.identifier(rollId),
-    );
+    await RevealService.unschedule(session, rollId);
     await RevealService.reveal(session, rollId, trigger: 'host');
     return Access.roll(session, rollId);
   }
@@ -165,7 +164,10 @@ class EventsEndpoint extends Endpoint {
       where: (t) => t.rollId.inSet({for (final r in open) r.id!}),
       orderBy: (t) => t.receivedAt,
     );
-    return [for (final p in photos) if (!gone.contains(p.shotId)) p];
+    return [
+      for (final p in photos)
+        if (!gone.contains(p.shotId)) p,
+    ];
   }
 
   /// Removes a photo for everyone (the host's privacy control). The receipt

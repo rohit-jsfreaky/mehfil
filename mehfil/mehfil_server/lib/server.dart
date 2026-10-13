@@ -5,12 +5,15 @@ import 'package:serverpod_auth_idp_server/providers/anonymous.dart';
 import 'package:serverpod_auth_idp_server/providers/email.dart';
 import 'package:serverpod_cloud_storage/serverpod_cloud_storage.dart';
 
+import 'src/auth/demo_host.dart';
 import 'src/cache_busting.dart';
 import 'src/core/access.dart';
 import 'src/generated/serverpod.dart';
 import 'src/generated/protocol.dart';
+import 'src/reveal/reveal_clock.dart';
 import 'src/reveal/reveal_service.dart';
 import 'src/web/routes/app_config_route.dart';
+import 'src/web/routes/gzip_wasm_route.dart';
 
 /// The starting point of the Serverpod server.
 void run(List<String> args) async {
@@ -90,6 +93,18 @@ void run(List<String> args) async {
   // Checks if the flutter web app has been built and serves it if it has.
   final appDir = Directory(Uri(path: 'web/app').toFilePath());
   if (appDir.existsSync()) {
+    // The big wasm files go out gzipped (the CDN only compresses text).
+    for (final wasm in [
+      'canvaskit/canvaskit.wasm',
+      'canvaskit/chromium/canvaskit.wasm',
+      'sqlite3.wasm',
+    ]) {
+      final file = File(Uri(path: 'web/app/$wasm').toFilePath());
+      if (file.existsSync()) {
+        pod.webServer.addRoute(GzipWasmRoute(file), '/$wasm');
+      }
+    }
+
     // Serve the flutter web app under /.
     pod.webServer.addRoute(
       FlutterRoute(
@@ -143,9 +158,26 @@ void run(List<String> args) async {
   // Finish any reveal a crash cut short. Scheduled reveals need nothing here:
   // future calls are stored in the database and survive restarts.
   final session = await pod.createSession(enableLogging: false);
+  final bool futureCallsOn;
   try {
     await RevealService.sweep(session);
+    futureCallsOn = await RevealService.futureCallsAvailable(session);
   } finally {
     await session.close();
   }
+
+  // Safety net under the future call: opens any reveal that is overdue. Where
+  // future calls run, the future call fires first and the clock waits 45 s
+  // before stepping in. On Serverpod Cloud's free Starter plan (future calls
+  // switched off) the clock is what opens the album, on time.
+  RevealClock(
+    pod,
+    grace: futureCallsOn ? const Duration(seconds: 45) : Duration.zero,
+  ).start();
+  stdout.writeln(
+    futureCallsOn
+        ? 'Reveals: future calls, with the reveal clock as a safety net.'
+        : 'Reveals: future calls are off here; the reveal clock opens rolls.',
+  );
+  await DemoHost.ensure(pod);
 }

@@ -353,6 +353,12 @@ class Protocol extends _is.DatabaseSerializationManager
           dartType: 'DateTime',
           columnDefault: 'now',
         ),
+        _isp.ColumnDefinition(
+          name: 'recoveryHash',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
       ],
       foreignKeys: [
         _isp.ForeignKeyDefinition(

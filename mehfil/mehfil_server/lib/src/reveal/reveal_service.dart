@@ -13,12 +13,45 @@ abstract final class RevealService {
 
   /// Schedules (or moves) the reveal of [roll] to its `revealAt`.
   static Future<void> schedule(Session session, Roll roll) async {
-    final futureCalls = session.serverpod.futureCalls;
-    await futureCalls.cancel(identifier(roll.id!));
-    await futureCalls
-        .callAtTime(roll.revealAt.toUtc(), identifier: identifier(roll.id!))
-        .reveal
-        .openRoll(roll.id!);
+    try {
+      final futureCalls = session.serverpod.futureCalls;
+      await futureCalls.cancel(identifier(roll.id!));
+      await futureCalls
+          .callAtTime(roll.revealAt.toUtc(), identifier: identifier(roll.id!))
+          .reveal
+          .openRoll(roll.id!);
+    } catch (e) {
+      // Where future calls are switched off (Serverpod Cloud Starter), the
+      // reveal clock opens the roll instead. Creating the event must not fail.
+      session.log(
+        'Future call not scheduled for roll ${roll.id}: $e',
+        level: LogLevel.warning,
+      );
+    }
+  }
+
+  /// False where future calls are switched off (Serverpod Cloud Starter):
+  /// there the reveal clock is what opens rolls, so it runs with no grace.
+  static Future<bool> futureCallsAvailable(Session session) async {
+    try {
+      await session.serverpod.futureCalls.cancel('mehfil-availability-probe');
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Cancels the scheduled reveal of [rollId], if there is one.
+  static Future<void> unschedule(Session session, int rollId) async {
+    try {
+      await session.serverpod.futureCalls.cancel(identifier(rollId));
+    } catch (e) {
+      // Nothing was scheduled where future calls are switched off.
+      session.log(
+        'Future call not cancelled for roll $rollId: $e',
+        level: LogLevel.warning,
+      );
+    }
   }
 
   /// Returns true when this call is the one that revealed the roll.

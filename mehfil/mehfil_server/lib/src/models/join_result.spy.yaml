@@ -3,3 +3,6 @@ fields:
   event: EventPublic
   guest: Guest
   albumSpaceId: UuidValue
+  ### Sent once, when the guest first joins: the phone stores it with the
+  ### join. Null on later joins (the server keeps only its hash).
+  recoveryKey: String?

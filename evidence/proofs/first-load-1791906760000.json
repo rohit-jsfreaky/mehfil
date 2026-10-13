@@ -1,0 +1,16 @@
+{
+  "claim": "A guest's first visit (no cache, no service worker) shows the invite quickly",
+  "url": "https://mehfil.serverpod.space/e/6U5ZG9",
+  "measuredAt": "2026-10-13T16:00Z",
+  "browser": "Chromium (Playwright), viewport 400x860, browser cache cleared and disabled, service worker unregistered",
+  "network": "Rohit's home connection, Kolkata; server on Serverpod Cloud",
+  "metric": "ms from navigation to Flutter's first frame (flt-semantics-placeholder attached)",
+  "runs": [
+    {"cdn": "cold, first request after a deploy", "firstFrameMs": 9302,
+     "resources": ["canvaskit/chromium/canvaskit.wasm 2638ms 2080777B (gzip)", "main.dart.js 4913ms 1296856B (gzip)"]},
+    {"cdn": "warm", "firstFrameMs": 1239,
+     "resources": ["canvaskit/chromium/canvaskit.wasm 211ms 2080777B (gzip)", "main.dart.js 262ms 1296856B (gzip)"]}
+  ],
+  "before": "canvaskit.wasm went out uncompressed (5428806 B chromium / 7284602 B full); one uncached fetch of the full file took 8.0 s",
+  "change": "GzipWasmRoute serves the wasm files gzipped (compressed once at start-up)"
+}

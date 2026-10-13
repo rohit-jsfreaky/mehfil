@@ -21,6 +21,7 @@ abstract class Guest implements _is.TableRow<int?>, _is.ProtocolSerialization {
     required this.authUserId,
     required this.name,
     DateTime? joinedAt,
+    this.recoveryHash,
   }) : joinedAt = joinedAt ?? DateTime.now();
 
   factory Guest({
@@ -29,6 +30,7 @@ abstract class Guest implements _is.TableRow<int?>, _is.ProtocolSerialization {
     required _is.UuidValue authUserId,
     required String name,
     DateTime? joinedAt,
+    String? recoveryHash,
   }) = _GuestImpl;
 
   factory Guest.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -42,6 +44,7 @@ abstract class Guest implements _is.TableRow<int?>, _is.ProtocolSerialization {
       joinedAt: jsonSerialization['joinedAt'] == null
           ? null
           : _is.DateTimeJsonExtension.fromJson(jsonSerialization['joinedAt']),
+      recoveryHash: jsonSerialization['recoveryHash'] as String?,
     );
   }
 
@@ -60,6 +63,11 @@ abstract class Guest implements _is.TableRow<int?>, _is.ProtocolSerialization {
 
   DateTime joinedAt;
 
+  /// SHA-256 of the guest's recovery key. The phone keeps the key; if its
+  /// session is ever lost (a refresh cut short), the key gets the same guest
+  /// back, with its queued photos. Never sent to any client.
+  String? recoveryHash;
+
   @override
   _is.Table<int?> get table => t;
 
@@ -72,6 +80,7 @@ abstract class Guest implements _is.TableRow<int?>, _is.ProtocolSerialization {
     _is.UuidValue? authUserId,
     String? name,
     DateTime? joinedAt,
+    String? recoveryHash,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -82,6 +91,7 @@ abstract class Guest implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'authUserId': authUserId.toJson(),
       'name': name,
       'joinedAt': joinedAt.toJson(),
+      if (recoveryHash != null) 'recoveryHash': recoveryHash,
     };
   }
 
@@ -134,12 +144,14 @@ class _GuestImpl extends Guest {
     required _is.UuidValue authUserId,
     required String name,
     DateTime? joinedAt,
+    String? recoveryHash,
   }) : super._(
          id: id,
          eventId: eventId,
          authUserId: authUserId,
          name: name,
          joinedAt: joinedAt,
+         recoveryHash: recoveryHash,
        );
 
   /// Returns a shallow copy of this [Guest]
@@ -152,6 +164,7 @@ class _GuestImpl extends Guest {
     _is.UuidValue? authUserId,
     String? name,
     DateTime? joinedAt,
+    Object? recoveryHash = _Undefined,
   }) {
     return Guest(
       id: id is int? ? id : this.id,
@@ -159,6 +172,7 @@ class _GuestImpl extends Guest {
       authUserId: authUserId ?? this.authUserId,
       name: name ?? this.name,
       joinedAt: joinedAt ?? this.joinedAt,
+      recoveryHash: recoveryHash is String? ? recoveryHash : this.recoveryHash,
     );
   }
 }
@@ -188,6 +202,12 @@ class GuestUpdateTable extends _is.UpdateTable<GuestTable> {
         table.joinedAt,
         value,
       );
+
+  _is.ColumnValue<String, String> recoveryHash(String? value) =>
+      _is.ColumnValue(
+        table.recoveryHash,
+        value,
+      );
 }
 
 class GuestTable extends _is.Table<int?> {
@@ -210,6 +230,10 @@ class GuestTable extends _is.Table<int?> {
       this,
       hasDefault: true,
     );
+    recoveryHash = _is.ColumnString(
+      'recoveryHash',
+      this,
+    );
   }
 
   late final GuestUpdateTable updateTable;
@@ -222,6 +246,11 @@ class GuestTable extends _is.Table<int?> {
 
   late final _is.ColumnDateTime joinedAt;
 
+  /// SHA-256 of the guest's recovery key. The phone keeps the key; if its
+  /// session is ever lost (a refresh cut short), the key gets the same guest
+  /// back, with its queued photos. Never sent to any client.
+  late final _is.ColumnString recoveryHash;
+
   @override
   List<_is.Column> get columns => [
     id,
@@ -229,6 +258,7 @@ class GuestTable extends _is.Table<int?> {
     authUserId,
     name,
     joinedAt,
+    recoveryHash,
   ];
 }
 

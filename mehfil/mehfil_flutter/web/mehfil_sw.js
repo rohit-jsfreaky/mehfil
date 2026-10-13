@@ -33,7 +33,16 @@ async function networkFirst(request, cacheKey) {
   try {
     // On one bar of signal, give up after a few seconds and use the cache.
     const response = await Promise.race([fetch(request), timeout(5000)]);
-    if (response.ok) cache.put(cacheKey, response.clone());
+    if (response.ok) {
+      cache.put(cacheKey, response.clone());
+      return response;
+    }
+    // A server error (a restart, a deploy) must not break a guest who has the
+    // app cached: use the cached copy, and the error only when there is none.
+    if (response.status >= 500) {
+      const cached = await cache.match(cacheKey);
+      if (cached) return cached;
+    }
     return response;
   } catch (err) {
     const cached = await cache.match(cacheKey);

@@ -6,6 +6,10 @@ fields:
   authUserId: UuidValue
   name: String
   joinedAt: DateTime, default=now
+  ### SHA-256 of the guest's recovery key. The phone keeps the key; if its
+  ### session is ever lost (a refresh cut short), the key gets the same guest
+  ### back, with its queued photos. Never sent to any client.
+  recoveryHash: String?, scope=serverOnly
 indexes:
   guest_event_user_idx:
     fields: eventId, authUserId

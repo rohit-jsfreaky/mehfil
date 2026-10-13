@@ -1,0 +1,70 @@
+{
+  "label": "delivery",
+  "note": "",
+  "eventId": 7,
+  "rowsSynced": 1,
+  "filesReceived": 17,
+  "delivered": 1,
+  "rowsWithoutFile": 0,
+  "filesWithoutRow": 16,
+  "waitedOverMinute": 0,
+  "waitedOverMinuteNote": "server receivedAt minus the phone's own takenAt clock; > 60 s means it waited on the phone",
+  "longestWaitSeconds": 13,
+  "guests": [
+    {
+      "name": "Bua",
+      "rowsSynced": 0,
+      "filesReceived": 3,
+      "delivered": 0
+    },
+    {
+      "name": "Chachu",
+      "rowsSynced": 0,
+      "filesReceived": 2,
+      "delivered": 0
+    },
+    {
+      "name": "Dadi",
+      "rowsSynced": 0,
+      "filesReceived": 2,
+      "delivered": 0
+    },
+    {
+      "name": "Kavya",
+      "rowsSynced": 0,
+      "filesReceived": 0,
+      "delivered": 0
+    },
+    {
+      "name": "Mama",
+      "rowsSynced": 0,
+      "filesReceived": 2,
+      "delivered": 0
+    },
+    {
+      "name": "Meera",
+      "rowsSynced": 1,
+      "filesReceived": 1,
+      "delivered": 1
+    },
+    {
+      "name": "Neha",
+      "rowsSynced": 0,
+      "filesReceived": 3,
+      "delivered": 0
+    },
+    {
+      "name": "Priya",
+      "rowsSynced": 0,
+      "filesReceived": 2,
+      "delivered": 0
+    },
+    {
+      "name": "Rahul",
+      "rowsSynced": 0,
+      "filesReceived": 2,
+      "delivered": 0
+    }
+  ],
+  "serverNow": "2026-10-13T16:20:54.310468Z"
+}

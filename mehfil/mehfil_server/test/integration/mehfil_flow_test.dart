@@ -3,7 +3,12 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:image/image.dart' as img;
 import 'package:mehfil_server/src/generated/protocol.dart';
+import 'package:mehfil_server/src/reveal/reveal_clock.dart';
 import 'package:mehfil_server/src/reveal/reveal_service.dart';
+import 'package:serverpod_auth_idp_server/core.dart'
+    show AuthServicesInit, AuthUser, JwtConfigFromPasswords;
+import 'package:serverpod_auth_idp_server/providers/email.dart'
+    show EmailAccount;
 import 'package:serverpod_offline_sync_server/serverpod_offline_sync_server.dart'
     show
         OfflineSyncInitialize,
@@ -39,8 +44,13 @@ void main() {
     // wired here the way the generated class wires it in production.
     databaseInterceptor: offlineSyncDatabaseInterceptor,
     (sessionBuilder, endpoints) {
-      sessionBuilder.build().serverpod.initializeOfflineSync(
-        syncTables: syncTables,
+      final pod = sessionBuilder.build().serverpod;
+      pod.initializeOfflineSync(syncTables: syncTables);
+      // Token issuing (guest recovery) needs the auth services, set up the
+      // same way lib/server.dart does.
+      pod.initializeAuthServices(
+        tokenManagerBuilders: [JwtConfigFromPasswords()],
+        identityProviderBuilders: [],
       );
       TestSessionBuilder as(String userId) => sessionBuilder.copyWith(
         authentication: AuthenticationOverride.authenticationInfo(userId, {}),
@@ -49,6 +59,7 @@ void main() {
       late HostEvent created;
       late int rollId;
       late String code;
+      late JoinResult buaJoin;
 
       Future<ShotAck> send(String user, UuidValue shotId, ByteData bytes) {
         return endpoints.shot.upload(
@@ -62,6 +73,33 @@ void main() {
       }
 
       setUpAll(() async {
+        // Hosts sign in with email: give the test host an email account.
+        final setup = sessionBuilder.build();
+        final host = UuidValue.fromString(hostId);
+        if (await AuthUser.db.findById(setup, host) == null) {
+          await AuthUser.db.insertRow(
+            setup,
+            AuthUser(id: host, scopeNames: {}),
+          );
+          await EmailAccount.db.insertRow(
+            setup,
+            EmailAccount(
+              authUserId: host,
+              email: 'host@test.mehfil',
+              passwordHash: 'not-used-in-tests',
+            ),
+          );
+        }
+        // Guests are real (anonymous) accounts too.
+        for (final id in [bua, chachu, stranger]) {
+          final user = UuidValue.fromString(id);
+          if (await AuthUser.db.findById(setup, user) == null) {
+            await AuthUser.db.insertRow(
+              setup,
+              AuthUser(id: user, scopeNames: {}),
+            );
+          }
+        }
         created = await endpoints.events.createEvent(
           as(hostId),
           'Riya & Arjun',
@@ -76,8 +114,83 @@ void main() {
         );
         rollId = created.rolls.single.id!;
         code = created.event.joinCode;
-        await endpoints.guest.join(as(bua), code, 'Bua');
+        buaJoin = await endpoints.guest.join(as(bua), code, 'Bua');
         await endpoints.guest.join(as(chachu), code, 'Chachu');
+      });
+
+      group("when a guest's session is lost", () {
+        test('then the first join gave a recovery key and a re-join does '
+            'not', () async {
+          expect(buaJoin.recoveryKey, isNotNull);
+          final again = await endpoints.guest.join(as(bua), code, 'Bua');
+          expect(again.recoveryKey, isNull);
+          expect(again.guest.id, buaJoin.guest.id);
+        });
+
+        test('then the key gets the same guest back', () async {
+          final back = await endpoints.guest.recover(
+            sessionBuilder,
+            code,
+            buaJoin.guest.id!,
+            buaJoin.recoveryKey!,
+          );
+          expect(back.authUserId, UuidValue.fromString(bua));
+          expect(back.token, isNotEmpty);
+        });
+
+        test('then a wrong key is refused', () {
+          expect(
+            endpoints.guest.recover(
+              sessionBuilder,
+              code,
+              buaJoin.guest.id!,
+              'not-the-key',
+            ),
+            throwsA(
+              isA<MehfilException>().having(
+                (e) => e.code,
+                'code',
+                'recovery_failed',
+              ),
+            ),
+          );
+        });
+
+        test("then the key does not work with another event's code", () async {
+          final other = await endpoints.events.createEvent(
+            as(hostId),
+            'Another event',
+            [RollDraft(name: 'Roll', revealAt: DateTime.now())],
+            isDemo: true,
+            hostedBy: null,
+          );
+          expect(
+            endpoints.guest.recover(
+              sessionBuilder,
+              other.event.joinCode,
+              buaJoin.guest.id!,
+              buaJoin.recoveryKey!,
+            ),
+            throwsA(isA<MehfilException>()),
+          );
+        });
+      });
+
+      test('then a guest (no email account) cannot create an event', () {
+        expect(
+          endpoints.events.createEvent(
+            as(bua),
+            'Not mine',
+            [
+              RollDraft(name: 'Roll', revealAt: DateTime.now()),
+            ],
+            isDemo: false,
+            hostedBy: null,
+          ),
+          throwsA(
+            isA<MehfilException>().having((e) => e.code, 'code', 'not_host'),
+          ),
+        );
       });
 
       test(
@@ -150,29 +263,89 @@ void main() {
         },
       );
 
-      test('when a judge asks for a hidden sample on a demo event then they get an id, not a photo', () async {
-        await send(bua, UuidValue.fromString(const Uuid().v7()), jpeg(7));
-        final sample = await endpoints.judge.hiddenSample(as(stranger), code);
-        expect(sample, isNotNull);
-        await expectLater(
-          endpoints.album.photo(as(stranger), sample!.shotId, thumb: false),
-          throwsA(isA<MehfilException>()),
-        );
-      });
+      test(
+        'when a judge asks for a hidden sample on a demo event then they get an id, not a photo',
+        () async {
+          await send(bua, UuidValue.fromString(const Uuid().v7()), jpeg(7));
+          final sample = await endpoints.judge.hiddenSample(as(stranger), code);
+          expect(sample, isNotNull);
+          await expectLater(
+            endpoints.album.photo(as(stranger), sample!.shotId, thumb: false),
+            throwsA(isA<MehfilException>()),
+          );
+        },
+      );
 
-      test('when the event is not a demo then the judge page refuses', () async {
-        final real = await endpoints.events.createEvent(
-          as(hostId),
-          'A real wedding',
-          [RollDraft(name: 'Shaadi', revealAt: DateTime.now().add(const Duration(days: 1)))],
-          isDemo: false,
-          hostedBy: null,
-        );
-        await expectLater(
-          endpoints.judge.hiddenSample(as(stranger), real.event.joinCode),
-          throwsA(isA<MehfilException>().having((e) => e.code, 'code', 'not_demo')),
-        );
-      });
+      test(
+        'when the event is not a demo then the judge page refuses',
+        () async {
+          final real = await endpoints.events.createEvent(
+            as(hostId),
+            'A real wedding',
+            [
+              RollDraft(
+                name: 'Shaadi',
+                revealAt: DateTime.now().add(const Duration(days: 1)),
+              ),
+            ],
+            isDemo: false,
+            hostedBy: null,
+          );
+          await expectLater(
+            endpoints.judge.hiddenSample(as(stranger), real.event.joinCode),
+            throwsA(
+              isA<MehfilException>().having((e) => e.code, 'code', 'not_demo'),
+            ),
+          );
+        },
+      );
+
+      test(
+        'when a roll is overdue and no future call ran then the reveal clock opens it, once',
+        () async {
+          final session = sessionBuilder.build();
+          final overdue = await endpoints.events.createEvent(
+            as(hostId),
+            'Clock test (demo)',
+            [
+              RollDraft(
+                name: 'Mehndi',
+                revealAt: DateTime.now().subtract(const Duration(minutes: 5)),
+              ),
+            ],
+            isDemo: true,
+            hostedBy: null,
+          );
+          final id = overdue.rolls.single.id!;
+          // Not yet past the grace window: nothing happens.
+          expect(
+            await RevealClock.revealOverdue(
+              session,
+              grace: const Duration(hours: 1),
+            ),
+            0,
+          );
+          expect(
+            await RevealClock.revealOverdue(
+              session,
+              grace: const Duration(seconds: 30),
+            ),
+            greaterThanOrEqualTo(1),
+          );
+          expect(
+            await RevealClock.revealOverdue(
+              session,
+              grace: const Duration(seconds: 30),
+            ),
+            0,
+          );
+          final logs = await RevealLog.db.find(
+            session,
+            where: (t) => t.rollId.equals(id),
+          );
+          expect(logs.single.trigger, 'clock');
+        },
+      );
 
       group('before the reveal', () {
         late UuidValue buaShot;
@@ -304,44 +477,60 @@ void main() {
           );
         });
 
-        test('then the wall lists who sent photos, names and counts only', () async {
-          final wall = await endpoints.wall.snapshot(as(chachu), code);
-          expect(wall.activity, isNotEmpty);
-          expect(
-            wall.activity.where((a) => a.kind == 'photos').map((a) => a.name),
-            contains('Bua'),
-          );
-        });
+        test(
+          'then the wall lists who sent photos, names and counts only',
+          () async {
+            final wall = await endpoints.wall.snapshot(as(chachu), code);
+            expect(wall.activity, isNotEmpty);
+            expect(
+              wall.activity.where((a) => a.kind == 'photos').map((a) => a.name),
+              contains('Bua'),
+            );
+          },
+        );
 
-        test('then the host sees the album and can remove a photo for everyone', () async {
-          final before = await endpoints.events.album(as(hostId), created.event.id!);
-          expect(before, isNotEmpty);
-          final target = before.first.shotId;
+        test(
+          'then the host sees the album and can remove a photo for everyone',
+          () async {
+            final before = await endpoints.events.album(
+              as(hostId),
+              created.event.id!,
+            );
+            expect(before, isNotEmpty);
+            final target = before.first.shotId;
 
-          await expectLater(
-            endpoints.events.removePhoto(as(chachu), target),
-            throwsA(isA<MehfilException>()),
-          );
-          await endpoints.events.removePhoto(as(hostId), target);
+            await expectLater(
+              endpoints.events.removePhoto(as(chachu), target),
+              throwsA(isA<MehfilException>()),
+            );
+            await endpoints.events.removePhoto(as(hostId), target);
 
-          final after = await endpoints.events.album(as(hostId), created.event.id!);
-          expect(after.map((p) => p.shotId), isNot(contains(target)));
-          await expectLater(
-            endpoints.album.photo(as(chachu), target, thumb: true),
-            throwsA(isA<MehfilException>()),
-          );
-          final session = sessionBuilder.build();
-          final inAlbumSpace = await AlbumPhoto.db.count(
-            session,
-            where: (t) => t.shotId.equals(target),
-          );
-          expect(inAlbumSpace, 0);
-          final receipt = await ShotReceipt.db.findFirstRow(
-            session,
-            where: (t) => t.shotId.equals(target),
-          );
-          expect(receipt!.removedAt, isNotNull, reason: 'evidence that it arrived stays');
-        });
+            final after = await endpoints.events.album(
+              as(hostId),
+              created.event.id!,
+            );
+            expect(after.map((p) => p.shotId), isNot(contains(target)));
+            await expectLater(
+              endpoints.album.photo(as(chachu), target, thumb: true),
+              throwsA(isA<MehfilException>()),
+            );
+            final session = sessionBuilder.build();
+            final inAlbumSpace = await AlbumPhoto.db.count(
+              session,
+              where: (t) => t.shotId.equals(target),
+            );
+            expect(inAlbumSpace, 0);
+            final receipt = await ShotReceipt.db.findFirstRow(
+              session,
+              where: (t) => t.shotId.equals(target),
+            );
+            expect(
+              receipt!.removedAt,
+              isNotNull,
+              reason: 'evidence that it arrived stays',
+            );
+          },
+        );
 
         test('then a late photo joins the album straight away', () async {
           final late = UuidValue.fromString(const Uuid().v7());

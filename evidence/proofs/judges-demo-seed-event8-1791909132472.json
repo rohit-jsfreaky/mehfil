@@ -1,0 +1,58 @@
+{
+  "label": "judges-demo-seed",
+  "note": "demo guests seeded by seed_guests (row via offline sync + file via upload)",
+  "eventId": 8,
+  "rowsSynced": 16,
+  "filesReceived": 16,
+  "delivered": 16,
+  "rowsWithoutFile": 0,
+  "filesWithoutRow": 0,
+  "waitedOverMinute": 0,
+  "waitedOverMinuteNote": "server receivedAt minus the phone's own takenAt clock; > 60 s means it waited on the phone",
+  "longestWaitSeconds": 10,
+  "guests": [
+    {
+      "name": "Bua",
+      "rowsSynced": 3,
+      "filesReceived": 3,
+      "delivered": 3
+    },
+    {
+      "name": "Chachu",
+      "rowsSynced": 2,
+      "filesReceived": 2,
+      "delivered": 2
+    },
+    {
+      "name": "Dadi",
+      "rowsSynced": 2,
+      "filesReceived": 2,
+      "delivered": 2
+    },
+    {
+      "name": "Mama",
+      "rowsSynced": 2,
+      "filesReceived": 2,
+      "delivered": 2
+    },
+    {
+      "name": "Neha",
+      "rowsSynced": 3,
+      "filesReceived": 3,
+      "delivered": 3
+    },
+    {
+      "name": "Priya",
+      "rowsSynced": 2,
+      "filesReceived": 2,
+      "delivered": 2
+    },
+    {
+      "name": "Rahul",
+      "rowsSynced": 2,
+      "filesReceived": 2,
+      "delivered": 2
+    }
+  ],
+  "serverNow": "2026-10-13T16:32:12.472406Z"
+}

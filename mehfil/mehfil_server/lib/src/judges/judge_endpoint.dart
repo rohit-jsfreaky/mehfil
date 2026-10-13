@@ -22,7 +22,8 @@ class JudgeEndpoint extends Endpoint {
     final receipt = await ShotReceipt.db.findFirstRow(
       session,
       where: (t) =>
-          t.rollId.inSet({for (final r in hidden) r.id!}) & t.removedAt.equals(null),
+          t.rollId.inSet({for (final r in hidden) r.id!}) &
+          t.removedAt.equals(null),
       orderBy: (t) => t.receivedAt,
     );
     if (receipt == null) return null;

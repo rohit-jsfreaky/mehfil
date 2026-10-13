@@ -1051,6 +1051,43 @@ class _GuestEndpoint {
     });
   }
 
+  _ida.Future<_iacs.AuthSuccess> recover(
+    _ist.TestSessionBuilder sessionBuilder,
+    String joinCode,
+    int guestId,
+    String recoveryKey,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'guest',
+            method: 'recover',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'guest',
+          methodName: 'recover',
+          parameters: _ist.testObjectToJson({
+            'joinCode': joinCode,
+            'guestId': guestId,
+            'recoveryKey': recoveryKey,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_iacs.AuthSuccess>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
   _ida.Future<List<_is.UuidValue>> delivered(
     _ist.TestSessionBuilder sessionBuilder,
     int eventId,

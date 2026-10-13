@@ -21,12 +21,14 @@ abstract class JoinResult
     required this.event,
     required this.guest,
     required this.albumSpaceId,
+    this.recoveryKey,
   });
 
   factory JoinResult({
     required _ilhd52bb.EventPublic event,
     required _ih9iep0x.Guest guest,
     required _is.UuidValue albumSpaceId,
+    String? recoveryKey,
   }) = _JoinResultImpl;
 
   factory JoinResult.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -40,6 +42,7 @@ abstract class JoinResult
       albumSpaceId: _is.UuidValueJsonExtension.fromJson(
         jsonSerialization['albumSpaceId'],
       ),
+      recoveryKey: jsonSerialization['recoveryKey'] as String?,
     );
   }
 
@@ -49,6 +52,10 @@ abstract class JoinResult
 
   _is.UuidValue albumSpaceId;
 
+  /// Sent once, when the guest first joins: the phone stores it with the
+  /// join. Null on later joins (the server keeps only its hash).
+  String? recoveryKey;
+
   /// Returns a shallow copy of this [JoinResult]
   /// with some or all fields replaced by the given arguments.
   @_is.useResult
@@ -56,6 +63,7 @@ abstract class JoinResult
     _ilhd52bb.EventPublic? event,
     _ih9iep0x.Guest? guest,
     _is.UuidValue? albumSpaceId,
+    String? recoveryKey,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -64,6 +72,7 @@ abstract class JoinResult
       'event': event.toJson(),
       'guest': guest.toJson(),
       'albumSpaceId': albumSpaceId.toJson(),
+      if (recoveryKey != null) 'recoveryKey': recoveryKey,
     };
   }
 
@@ -74,6 +83,7 @@ abstract class JoinResult
       'event': event.toJsonForProtocol(),
       'guest': guest.toJsonForProtocol(),
       'albumSpaceId': albumSpaceId.toJson(),
+      if (recoveryKey != null) 'recoveryKey': recoveryKey,
     };
   }
 
@@ -83,15 +93,19 @@ abstract class JoinResult
   }
 }
 
+class _Undefined {}
+
 class _JoinResultImpl extends JoinResult {
   _JoinResultImpl({
     required _ilhd52bb.EventPublic event,
     required _ih9iep0x.Guest guest,
     required _is.UuidValue albumSpaceId,
+    String? recoveryKey,
   }) : super._(
          event: event,
          guest: guest,
          albumSpaceId: albumSpaceId,
+         recoveryKey: recoveryKey,
        );
 
   /// Returns a shallow copy of this [JoinResult]
@@ -102,11 +116,13 @@ class _JoinResultImpl extends JoinResult {
     _ilhd52bb.EventPublic? event,
     _ih9iep0x.Guest? guest,
     _is.UuidValue? albumSpaceId,
+    Object? recoveryKey = _Undefined,
   }) {
     return JoinResult(
       event: event ?? this.event.copyWith(),
       guest: guest ?? this.guest.copyWith(),
       albumSpaceId: albumSpaceId ?? this.albumSpaceId,
+      recoveryKey: recoveryKey is String? ? recoveryKey : this.recoveryKey,
     );
   }
 }
