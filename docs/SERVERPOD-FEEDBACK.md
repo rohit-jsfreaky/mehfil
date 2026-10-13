@@ -123,7 +123,23 @@ Format for each note:
   plan"), and `cancel` of a call that can't exist being a no-op. The pricing page lists the limit, but nothing at
   runtime or in `serverpod cloud deploy` warns that the deployed code uses a disabled feature.
 - **Workaround** — Mehfil wraps both calls (`RevealService.schedule` / `unschedule`) and adds a "reveal clock": every
-  10 s the server opens any roll whose reveal time passed more than 45 s ago, using the same exactly-once reveal. Where
-  future calls run, the future call fires first and the clock finds nothing to do.
+  5 s the server opens any roll whose reveal time has passed, using the same exactly-once reveal. At start-up it probes
+  whether future calls work; where they do, the clock waits 45 s past the reveal time, so the future call fires first
+  and the clock finds nothing to do.
 - **Suggestion** — a typed `FutureCallsDisabledException`, and a deploy-time hint when the generated code contains future
   calls but the plan disables them.
+
+### 8. On Windows, `SERVERPOD_PASSWORD_<name>` environment variables arrive with the name in CAPITALS
+- **Date / version** — 13 Oct 2026 · Serverpod 4.1.0-beta.3 · Dart 3.12 on Windows 11
+- **What happened** — GitHub CI (Linux) had no `passwords.yaml`, so I gave the tests their auth keys as
+  `SERVERPOD_PASSWORD_jwtRefreshTokenHashPepper` etc. To check the fix on my Windows laptop I set the same variables,
+  and the tests still failed with "jwtRefreshTokenHashPepper was not found". On Windows `Platform.environment` returns
+  every key upper-cased (`SERVERPOD_PASSWORD_MYAPIKEY`), and `PasswordManager._findUserDefinedPasswordsFromEnv` keeps
+  the rest of the key as the password name, so the password is stored as `JWTREFRESHTOKENHASHPEPPER`.
+- **What I expected** — the same variable to work on every OS, since the docs show mixed-case names
+  (`SERVERPOD_PASSWORD_myApiKey`).
+- **Workaround** — none needed in production (Linux). For local checks on Windows, put the values in
+  `config/passwords.yaml` instead.
+- **Suggestion** — on Windows, match the suffix case-insensitively against the password names the code asks for (or
+  look keys up through the case-insensitive map rather than iterating its upper-cased entries), and mention it in the
+  passwords docs.
