@@ -1,0 +1,18 @@
+### For the host and the evidence files: what the server really holds.
+### A shot is "delivered" only when its synced row AND its file are here.
+class: DeliveryReport
+fields:
+  eventId: int
+  rowsSynced: int
+  filesReceived: int
+  delivered: int
+  rowsWithoutFile: int
+  filesWithoutRow: int
+  guests: List<GuestDelivery>
+  serverNow: DateTime
+  ### Photos that reached the server more than a minute after the phone took
+  ### them (server receivedAt minus the phone's takenAt claim): they waited
+  ### on the phone, usually for signal.
+  waitedOverMinute: int, default=0
+  ### Longest wait in seconds (same measure).
+  longestWaitSeconds: int, default=0

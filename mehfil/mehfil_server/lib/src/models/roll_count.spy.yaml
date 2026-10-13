@@ -1,0 +1,8 @@
+class: RollCount
+fields:
+  rollId: int
+  name: String
+  revealAt: DateTime
+  revealedAt: DateTime?
+  photos: int
+  guests: int

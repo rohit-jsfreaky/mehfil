@@ -1,0 +1,15 @@
+### A photo a guest took. Written on the phone first (even with no signal) in
+### the guest's personal sync space, so nobody else can see it.
+class: Shot
+table: shot
+database: sync
+fields:
+  eventId: int
+  rollId: int
+  guestName: String
+  ### The phone's clock when the shutter was pressed. A claim, not a fact.
+  takenAt: DateTime
+  sha256: String
+  width: int
+  height: int
+  sizeBytes: int

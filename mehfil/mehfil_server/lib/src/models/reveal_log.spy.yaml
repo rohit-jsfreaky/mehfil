@@ -1,0 +1,14 @@
+### One row per revealed roll. The unique index is what makes a reveal happen
+### exactly once, whoever triggers it (the future call or the host).
+class: RevealLog
+table: reveal_log
+fields:
+  rollId: int, relation(parent=roll, onDelete=Cascade)
+  ### "schedule" (the future call) or "host" (Reveal now).
+  trigger: String
+  photos: int
+  revealedAt: DateTime
+indexes:
+  reveal_log_roll_idx:
+    fields: rollId
+    unique: true

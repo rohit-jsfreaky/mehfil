@@ -1,0 +1,4 @@
+exception: MehfilException
+fields:
+  code: String
+  message: String

@@ -1,0 +1,12 @@
+name: _
+publish_to: none
+
+environment:
+  sdk: '^3.12.2'
+
+workspace:
+  - mehfil_client
+  - mehfil_server
+  - mehfil_flutter
+  - mehfil_tools
+

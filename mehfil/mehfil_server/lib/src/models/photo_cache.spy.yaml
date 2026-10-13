@@ -1,0 +1,13 @@
+### Phone-side copy of revealed photos, so the album opens with no signal.
+class: PhotoCache
+table: photo_cache
+database: client
+fields:
+  shotId: UuidValue
+  thumb: bool
+  bytes: ByteData
+  savedAt: DateTime
+indexes:
+  photo_cache_shot_idx:
+    fields: shotId, thumb
+    unique: true

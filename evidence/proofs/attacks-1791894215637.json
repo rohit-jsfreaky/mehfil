@@ -1,0 +1,59 @@
+{
+  "server": "http://localhost:8080/",
+  "eventId": 67,
+  "ranAt": "2026-10-13T12:23:35.637591Z",
+  "passed": 10,
+  "total": 10,
+  "results": [
+    {
+      "claim": "A made-up join code cannot sign in",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "claim": "Before the reveal, another guest cannot fetch a guest's photo",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "claim": "Before the reveal, even the host cannot fetch it",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "claim": "A guessed storage URL returns no photo",
+      "pass": true,
+      "detail": "HTTP 404"
+    },
+    {
+      "claim": "Before the reveal, offline sync gives guest B none of A's rows",
+      "pass": true,
+      "detail": "B sees 0 shot rows, 0 album rows"
+    },
+    {
+      "claim": "The wall shows the count but no photo",
+      "pass": true,
+      "detail": "photos=2"
+    },
+    {
+      "claim": "After the reveal, offline sync brings guest B the album",
+      "pass": true,
+      "detail": "B sees 2 album rows"
+    },
+    {
+      "claim": "After the reveal, A's private shot rows still stay with A",
+      "pass": true,
+      "detail": "B sees 0 shot rows"
+    },
+    {
+      "claim": "After the reveal, a guest can open the photo",
+      "pass": true,
+      "detail": "15868 bytes"
+    },
+    {
+      "claim": "After the reveal, a guest of another event still cannot fetch it",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

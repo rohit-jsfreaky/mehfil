@@ -1,0 +1,35 @@
+{
+    "name": "Mehfil",
+    "short_name": "Mehfil",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0D0F13",
+    "theme_color": "#0D0F13",
+    "description": "The wedding's disposable camera on every guest's phone. Works with no signal.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+{
+  "label": "offline-browser-test",
+  "note": "Chrome at phone size. 3 shots with browser offline, tab closed, reopened online. 3 shots with server stopped, tab closed and reopened with server still down (loaded from service worker cache, queue intact), server started 12:07:01Z, all 6 sent by 12:07:11Z.",
+  "eventId": 34,
+  "rowsSynced": 6,
+  "filesReceived": 6,
+  "delivered": 6,
+  "rowsWithoutFile": 0,
+  "filesWithoutRow": 0,
+  "guests": [
+    {
+      "name": "Bua",
+      "rowsSynced": 6,
+      "filesReceived": 6,
+      "delivered": 6
+    }
+  ],
+  "serverNow": "2026-10-13T12:08:37.624076Z"
+}

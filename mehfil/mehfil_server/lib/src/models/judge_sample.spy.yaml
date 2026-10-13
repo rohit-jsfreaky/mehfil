@@ -1,0 +1,8 @@
+### A real, still-hidden photo of a DEMO event, so judges can try to open it
+### and watch the server refuse.
+class: JudgeSample
+fields:
+  shotId: UuidValue
+  eventId: int
+  rollId: int
+  guessedPath: String

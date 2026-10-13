@@ -1,0 +1,22 @@
+### A gathering (a wedding, a dinner). The host owns it; guests join it with
+### [joinCode] from the QR.
+class: Event
+table: event
+fields:
+  name: String
+  ### Shown on the invitation: "Hosted by the Sharma family".
+  hostedBy: String?
+  ### Short code in the QR link. Also the token the anonymous sign-in checks.
+  joinCode: String
+  ### The auth user id of the host who created the event.
+  hostUserId: UuidValue
+  ### Offline sync space that holds the revealed album. Guests become
+  ### read-only members of it when the first roll is revealed.
+  albumSpaceId: UuidValue
+  ### Events seeded for the video or for judges are labelled demo.
+  isDemo: bool, default=false
+  createdAt: DateTime, default=now
+indexes:
+  event_join_code_idx:
+    fields: joinCode
+    unique: true

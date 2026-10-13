@@ -1,0 +1,5 @@
+class: RollDraft
+fields:
+  name: String
+  revealAt: DateTime
+  shotsPerGuest: int, default=27

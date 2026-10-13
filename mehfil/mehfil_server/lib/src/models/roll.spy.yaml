@@ -1,0 +1,17 @@
+### One function of the event (Haldi, Sangeet...). Its photos stay hidden until
+### [revealAt]; the reveal future call sets [revealedAt].
+class: Roll
+table: roll
+fields:
+  eventId: int, relation(parent=event, onDelete=Cascade)
+  name: String
+  sortOrder: int, default=0
+  ### Server time (UTC) when the album opens for everyone.
+  revealAt: DateTime
+  ### Set once, by the reveal. Null means the roll is still hidden.
+  revealedAt: DateTime?
+  ### Like a disposable camera: how many shots each guest gets on this roll.
+  shotsPerGuest: int, default=27
+indexes:
+  roll_event_idx:
+    fields: eventId

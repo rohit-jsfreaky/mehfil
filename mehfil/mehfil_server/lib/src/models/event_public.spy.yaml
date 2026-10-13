@@ -1,0 +1,13 @@
+### What a guest's phone gets when it opens the QR link: no photos, ever.
+class: EventPublic
+fields:
+  eventId: int
+  name: String
+  hostedBy: String?
+  ### How many guests joined, and the first few names (for the avatars).
+  guests: int
+  guestNames: List<String>
+  joinCode: String
+  isDemo: bool
+  rolls: List<Roll>
+  serverNow: DateTime

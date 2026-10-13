@@ -1,0 +1,7 @@
+### The server's answer to an upload. [duplicate] is true when the shot had
+### already arrived (a retry after a dropped connection).
+class: ShotAck
+fields:
+  shotId: UuidValue
+  receivedAt: DateTime
+  duplicate: bool

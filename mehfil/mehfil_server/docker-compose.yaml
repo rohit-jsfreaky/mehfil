@@ -1,0 +1,44 @@
+services:
+  # Development services
+  postgres:
+    image: ghcr.io/serverpod/postgres:16
+    ports:
+      - "8090:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: mehfil
+      POSTGRES_PASSWORD: "3mTVVe6HSonDWzqiDdfVW-Ozu77osJ4g"
+    volumes:
+      - mehfil_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6.2.6
+    ports:
+      - "8091:6379"
+    command: redis-server --requirepass "DuFLWz-qUV4tVn1xVsl1u8rIngDVk1ti"
+    environment:
+      - REDIS_REPLICATION_MODE=master
+
+  # Test services
+  postgres_test:
+    image: ghcr.io/serverpod/postgres:16
+    ports:
+      - "9090:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: mehfil_test
+      POSTGRES_PASSWORD: "Q-Fk5SVFZz8zL5X_I-jWXiS0IkLoKsYK"
+    volumes:
+      - mehfil_test_data:/var/lib/postgresql/data
+
+  redis_test:
+    image: redis:6.2.6
+    ports:
+      - "9091:6379"
+    command: redis-server --requirepass "sM68enq5TlKkMyKi3wMZPX2ot45_9B4n"
+    environment:
+      - REDIS_REPLICATION_MODE=master
+
+volumes:
+  mehfil_data:
+  mehfil_test_data:

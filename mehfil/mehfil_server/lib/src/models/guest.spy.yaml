@@ -1,0 +1,12 @@
+### A person who joined an event from the QR (anonymous sign-in + a name).
+class: Guest
+table: guest
+fields:
+  eventId: int, relation(parent=event, onDelete=Cascade)
+  authUserId: UuidValue
+  name: String
+  joinedAt: DateTime, default=now
+indexes:
+  guest_event_user_idx:
+    fields: eventId, authUserId
+    unique: true

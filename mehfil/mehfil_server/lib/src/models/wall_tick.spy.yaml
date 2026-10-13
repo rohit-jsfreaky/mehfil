@@ -1,0 +1,5 @@
+### Posted on the event channel whenever counts may have changed.
+class: WallTick
+fields:
+  eventId: int
+  reason: String

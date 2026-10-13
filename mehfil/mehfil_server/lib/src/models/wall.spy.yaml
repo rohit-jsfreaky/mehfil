@@ -1,0 +1,15 @@
+### Live counts for the couple's screen. Counts only: no photo leaves the
+### server before the reveal.
+class: WallSnapshot
+fields:
+  eventId: int
+  eventName: String
+  isDemo: bool
+  photos: int
+  guests: int
+  ### Shots whose rows synced but whose files have not arrived yet.
+  onPhones: int
+  rolls: List<RollCount>
+  ### Latest happenings, newest first.
+  activity: List<WallActivity>
+  serverNow: DateTime

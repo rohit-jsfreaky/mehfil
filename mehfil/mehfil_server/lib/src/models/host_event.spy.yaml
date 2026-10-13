@@ -1,0 +1,6 @@
+class: HostEvent
+fields:
+  event: Event
+  rolls: List<Roll>
+  photos: int
+  guests: int

@@ -1,0 +1,6 @@
+class: GuestDelivery
+fields:
+  name: String
+  rowsSynced: int
+  filesReceived: int
+  delivered: int

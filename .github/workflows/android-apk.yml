@@ -1,0 +1,62 @@
+name: Android APK
+
+# Builds the host's Android app on GitHub's machines (the dev laptop overheats on
+# Gradle builds) and keeps the APK as a downloadable artifact.
+#
+# Set two repository variables (Settings > Secrets and variables > Actions >
+# Variables) after the first Serverpod Cloud launch:
+#   MEHFIL_SERVER_URL  e.g. https://mehfil.api.serverpod.space/
+#   MEHFIL_WEB_URL     e.g. https://mehfil.serverpod.space
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'mehfil/mehfil_flutter/**'
+      - 'mehfil/mehfil_client/**'
+      - '.github/workflows/android-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+
+      - name: Install Android NDK
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;28.2.13676358" > /dev/null
+
+      - name: Install dependencies
+        working-directory: mehfil
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: mehfil/mehfil_flutter
+        env:
+          SERVER_URL: ${{ vars.MEHFIL_SERVER_URL }}
+          WEB_URL: ${{ vars.MEHFIL_WEB_URL }}
+        run: |
+          if [ -z "$SERVER_URL" ] || [ -z "$WEB_URL" ]; then
+            echo "Set the MEHFIL_SERVER_URL and MEHFIL_WEB_URL repository variables first." >&2
+            exit 1
+          fi
+          flutter build apk --release \
+            --dart-define=SERVER_URL="$SERVER_URL" \
+            --dart-define=WEB_URL="$WEB_URL"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mehfil-android
+          path: mehfil/mehfil_flutter/build/app/outputs/flutter-apk/app-release.apk

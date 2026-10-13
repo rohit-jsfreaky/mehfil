@@ -1,0 +1,37 @@
+album:
+  - photo:
+anonymousIdp:
+  - login:
+emailIdp:
+  - login:
+  - startRegistration:
+  - verifyRegistrationCode:
+  - finishRegistration:
+  - startPasswordReset:
+  - verifyPasswordResetCode:
+  - finishPasswordReset:
+  - hasAccount:
+jwtRefresh:
+  - refreshAccessToken:
+events:
+  - createEvent:
+  - myEvents:
+  - addRoll:
+  - setRevealTime:
+  - revealNow:
+  - album:
+  - removePhoto:
+  - delivery:
+  - reveals:
+guest:
+  - now:
+  - event:
+  - join:
+  - delivered:
+judge:
+  - hiddenSample:
+shot:
+  - upload:
+wall:
+  - watch:
+  - snapshot:

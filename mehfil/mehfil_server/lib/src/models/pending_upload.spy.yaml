@@ -1,0 +1,17 @@
+### The phone-side queue: the photo bytes wait here (SQLite on the device, or
+### in the browser) until the server confirms it has them.
+class: PendingUpload
+table: pending_upload
+database: client
+fields:
+  shotId: UuidValue
+  eventId: int
+  rollId: int
+  bytes: ByteData
+  createdAt: DateTime
+  attempts: int, default=0
+  lastError: String?
+indexes:
+  pending_upload_shot_idx:
+    fields: shotId
+    unique: true

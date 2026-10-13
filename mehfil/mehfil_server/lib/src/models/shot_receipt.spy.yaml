@@ -1,0 +1,29 @@
+### The server's proof that a photo arrived: the file is in private storage and
+### its hash matched. Written once per shot, stamped with server time.
+class: ShotReceipt
+serverOnly: true
+table: shot_receipt
+fields:
+  shotId: UuidValue
+  eventId: int, relation(parent=event, onDelete=Cascade)
+  rollId: int, relation(parent=roll, onDelete=Cascade)
+  guestId: int, relation(parent=guest, onDelete=Cascade)
+  storagePath: String
+  thumbPath: String
+  sha256: String
+  sizeBytes: int
+  width: int
+  height: int
+  ### What the phone said. Shown as the phone's claim, never trusted.
+  takenAt: DateTime
+  ### Server time when the file and row were both stored.
+  receivedAt: DateTime
+  ### Set when the host removes the photo. The receipt stays as evidence that
+  ### it arrived; the file and its album copy are deleted.
+  removedAt: DateTime?
+indexes:
+  shot_receipt_shot_idx:
+    fields: shotId
+    unique: true
+  shot_receipt_roll_idx:
+    fields: rollId

@@ -1,0 +1,15 @@
+### A revealed photo. The reveal writes these into the event's album space, and
+### offline sync carries them to every guest's phone.
+class: AlbumPhoto
+table: album_photo
+database: sync
+fields:
+  shotId: UuidValue
+  eventId: int
+  rollId: int
+  rollName: String
+  guestName: String
+  takenAt: DateTime
+  receivedAt: DateTime
+  width: int
+  height: int

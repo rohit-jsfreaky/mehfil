@@ -1,0 +1,68 @@
+# ---------------------------------------------------------------------------
+# Markdown: only the README (and the Serverpod feedback the README links to)
+# is published. Planning notes, agent instructions and drafts stay local.
+# ---------------------------------------------------------------------------
+*.md
+!/README.md
+!/docs/SERVERPOD-FEEDBACK.md
+
+# Other people's material used only for research (App Store screenshots,
+# Apple's guideline text). Never publish it.
+docs/design-research/
+
+# Drafts for upstream issues: Rohit reviews and opens them himself.
+docs/upstream/
+
+# ---------------------------------------------------------------------------
+# Local tools and scratch
+# ---------------------------------------------------------------------------
+# Browser test screenshots, console logs and test photos
+.playwright-mcp/
+# Laptop-only build safety scripts (CPU/heat limits for this machine)
+scripts/
+# Proof script state
+.proof_reveal_restart.json
+**/.proof_reveal_restart.json
+
+# AI agent and editor folders
+.claude/
+.agents/
+.dart_skills/
+.cursor/
+.codex/
+.gemini/
+.vscode/
+.idea/
+*.iml
+.mcp.json
+
+# ---------------------------------------------------------------------------
+# Dart / Flutter / Serverpod build output and local state
+# (the app folder has its own .gitignore files too; these are a safety net)
+# ---------------------------------------------------------------------------
+.dart_tool/
+.packages
+build/
+pubspec_overrides.yaml
+**/web/app/
+**/.serverpod/
+**/config/passwords.yaml
+**/config/firebase_service_account_key.json
+.scloud/
+
+# Android build output and machine-specific files
+**/android/.gradle/
+**/android/local.properties
+**/android/app/release/
+*.jks
+*.keystore
+key.properties
+
+# ---------------------------------------------------------------------------
+# Secrets and OS files
+# ---------------------------------------------------------------------------
+.env
+.env.*
+*.pem
+.DS_Store
+Thumbs.db

@@ -1,0 +1,23 @@
+{
+  "claim": "The reveal fires even after a server restart, and fires once.",
+  "pass": true,
+  "eventId": 1,
+  "rollId": 1,
+  "joinCode": "NC826B",
+  "revealAt": "2026-10-13T11:32:08.670426Z",
+  "photosUploaded": 4,
+  "setupAt": "2026-10-13T11:30:30.764028Z",
+  "revealLog": [
+    {
+      "trigger": "schedule",
+      "photos": 4,
+      "revealedAt": "2026-10-13T11:32:10.385977Z"
+    }
+  ],
+  "rollRevealedAt": "2026-10-13T11:32:10.385977Z",
+  "lateBySeconds": 1.715,
+  "checkedAtServer": "2026-10-13T11:32:24.133186Z",
+  "serverStoppedAt": "2026-10-13T11:31:00Z (all server + embedded postgres processes killed, curl refused)",
+  "serverStartedAt": "2026-10-13T11:31:25Z",
+  "note": "Restart happened before revealAt; the future call was read back from the database after the restart."
+}

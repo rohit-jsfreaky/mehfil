@@ -1,0 +1,9 @@
+### One line on the wall: "Bua sent 3 photos" or "Kabir joined". Names and
+### counts only, never a photo.
+class: WallActivity
+fields:
+  name: String
+  ### "photos" or "joined".
+  kind: String
+  count: int
+  at: DateTime

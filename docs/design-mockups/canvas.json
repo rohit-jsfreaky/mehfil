@@ -1,0 +1,34 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-13T13:20:00Z" },
+  "title": "Mehfil redesign",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 390, "h": 844, "title": "01 · Invitation (guest opens the QR)" },
+    "Camera.dc.html": { "x": 470, "y": 0, "w": 390, "h": 844, "title": "02 · Camera" },
+    "CameraOffline.dc.html": { "x": 940, "y": 0, "w": 390, "h": 844, "title": "03 · Camera, no signal" },
+    "Event.dc.html": { "x": 1410, "y": 0, "w": 390, "h": 844, "title": "04 · Event (before the reveal)" },
+    "Album.dc.html": { "x": 1880, "y": 0, "w": 390, "h": 844, "title": "05 · Album (after the reveal)" },
+    "HostEvent.dc.html": { "x": 0, "y": 1310, "w": 390, "h": 844, "title": "06 · Host: event + QR" },
+    "HostSignIn.dc.html": { "x": 470, "y": 1310, "w": 390, "h": 844, "title": "07 · Host: sign in" },
+    "Wall.dc.html": { "x": 940, "y": 1310, "w": 1280, "h": 720, "title": "08 · Live wall (TV)" },
+    "Style.dc.html": { "x": 2300, "y": 1310, "w": 880, "h": 720, "title": "09 · Style sheet" }
+  },
+  "order": [
+    "Main.dc.html",
+    "Camera.dc.html",
+    "CameraOffline.dc.html",
+    "Event.dc.html",
+    "Album.dc.html",
+    "HostEvent.dc.html",
+    "HostSignIn.dc.html",
+    "Wall.dc.html",
+    "Style.dc.html"
+  ],
+  "notes": {
+    "guestFlow": { "x": 0, "y": -300, "text": "Guest: scan → shoot (even with no signal) → wait for the reveal → album", "kind": "title1", "maxW": 2270 },
+    "hostFlow": { "x": 0, "y": 1010, "text": "Host, the couple's TV, and the style sheet", "kind": "title1", "maxW": 3180 }
+  },
+  "designSystems": []
+}
