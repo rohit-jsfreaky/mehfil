@@ -1,0 +1,14 @@
+{
+  "claim": "With no internet, a guest who joined once can reload the page or open the link in a new tab: the app opens from the phone (no browser error page), with the camera, shot count and waiting photos. A guest who opened the link but has not joined sees 'Get signal once to join', and the page carries on by itself when the signal returns.",
+  "pass": true,
+  "server": "https://mehfil.serverpod.space",
+  "method": "Playwright (Chromium) on the live site. Internet cut for the test browser only with context.setOffline(true); restored after.",
+  "date": "2026-10-13T18:54:18Z",
+  "appFilesCachedOnFirstVisit": 24,
+  "steps": [
+    {"case": "joined guest (event 6U5ZG9, old test event)", "online": "camera, 26 shots left, 1 photo sent", "offlineReload": "HTTP 200 from the phone's cache; camera opens with 'No signal - keep shooting'", "offlineNewTab": "same", "screenshots": ["1-joined-online.png", "2-joined-offline-reload.png", "3-joined-offline-new-tab.png"]},
+    {"case": "opened the link, not joined (DCPBDR)", "offlineReload": "'Get signal once to join' with a waiting spinner", "backOnline": "invitation opened by itself within 9 s, no reload", "screenshots": ["4-not-joined-offline.png", "5-not-joined-back-online.png"]}
+  ],
+  "limits": "Joining needs the server once (the guest's sign-in comes from the QR's code). The live camera picture is blank because the test browser has no camera; on a phone it shows the camera.",
+  "screenshotsDir": "offline-reload-1791917657000/"
+}

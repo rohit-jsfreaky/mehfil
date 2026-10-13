@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mehfil_client/mehfil_client.dart';
 
@@ -26,10 +28,27 @@ class _JoinScreenState extends State<JoinScreen> {
   bool _busy = false;
   bool _loading = true;
 
+  /// No signal: try again every few seconds and carry on by itself, so a
+  /// guest who opened the link and then walked into the hall is not stuck.
+  Timer? _retry;
+  bool _waiting = false;
+
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _retry?.cancel();
+    _name.dispose();
+    super.dispose();
+  }
+
+  void _retryLater(Future<void> Function() action) {
+    _retry?.cancel();
+    _retry = Timer(const Duration(seconds: 4), action);
   }
 
   Future<void> _load() async {
@@ -41,9 +60,21 @@ class _JoinScreenState extends State<JoinScreen> {
     }
     try {
       final event = await client.guest.event(widget.code);
-      if (mounted) setState(() => _event = event);
+      if (mounted) {
+        setState(() {
+          _event = event;
+          _error = null;
+          _waiting = false;
+        });
+      }
     } catch (e) {
-      if (mounted) setState(() => _error = friendlyError(e));
+      if (!mounted) return;
+      final noSignal = isNoSignal(e);
+      setState(() {
+        _waiting = noSignal;
+        _error = noSignal ? null : friendlyError(e);
+      });
+      if (noSignal) _retryLater(_load);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -64,9 +95,23 @@ class _JoinScreenState extends State<JoinScreen> {
     try {
       await _enter(await GuestSession.joinEvent(widget.code, name));
     } catch (e) {
-      if (mounted) setState(() => _error = friendlyError(e));
-    } finally {
-      if (mounted) setState(() => _busy = false);
+      if (!mounted) return;
+      if (isNoSignal(e)) {
+        // Keep the button busy and join the moment the signal is back.
+        setState(() {
+          _waiting = true;
+          _error =
+              'No signal yet. Keep this page open: you will be in as soon as '
+              'it comes back.';
+        });
+        _retryLater(_join);
+        return;
+      }
+      setState(() {
+        _waiting = false;
+        _error = friendlyError(e);
+        _busy = false;
+      });
     }
   }
 
@@ -85,6 +130,46 @@ class _JoinScreenState extends State<JoinScreen> {
       return const MPage(
         child: Center(
           child: CircularProgressIndicator(color: M.ink, strokeWidth: 2),
+        ),
+      );
+    }
+    if (event == null && _waiting) {
+      return MPage(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(
+              height: 40,
+              child: Align(alignment: Alignment.centerLeft, child: Wordmark()),
+            ),
+            const SizedBox(height: 28),
+            Text('Get signal once to join', style: M.largeTitle),
+            const SizedBox(height: 12),
+            Text(
+              'Mehfil needs signal one time to add you to the event. Step '
+              'near the entrance or join the venue Wi-Fi. After that it works '
+              'with no signal.',
+              style: M.subhead,
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    color: M.ink,
+                    strokeWidth: 2,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Waiting for signal. This page carries on by itself.',
+                  style: M.footnote.copyWith(color: M.ink3),
+                ),
+              ],
+            ),
+          ],
         ),
       );
     }

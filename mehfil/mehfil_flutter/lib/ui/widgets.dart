@@ -543,11 +543,18 @@ String friendlyError(Object error) {
   final text = error.toString();
   final match = RegExp(r'message: ([^,)]+)').firstMatch(text);
   if (match != null) return match.group(1)!.trim();
-  if (text.contains('SocketException') ||
-      text.contains('XMLHttpRequest') ||
-      text.contains('Failed to fetch') ||
-      text.contains('ClientException')) {
+  if (isNoSignal(error)) {
     return 'No signal right now. Try again when you are back online.';
   }
   return 'Something went wrong. Please try again.';
+}
+
+/// True when [error] means the phone could not reach the server at all.
+bool isNoSignal(Object error) {
+  if (error is MehfilException) return false;
+  final text = error.toString();
+  return text.contains('SocketException') ||
+      text.contains('XMLHttpRequest') ||
+      text.contains('Failed to fetch') ||
+      text.contains('ClientException');
 }
