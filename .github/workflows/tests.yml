@@ -13,6 +13,10 @@ jobs:
       VERSION: '4.1.0-beta.3'
       SERVERPOD_PASSWORD_database: 'Q-Fk5SVFZz8zL5X_I-jWXiS0IkLoKsYK'
       SERVERPOD_PASSWORD_redis: 'sM68enq5TlKkMyKi3wMZPX2ot45_9B4n'
+      # Test-only peppers for the auth services the tests start (guest
+      # recovery issues real tokens). Not used by any deployed server.
+      SERVERPOD_PASSWORD_jwtRefreshTokenHashPepper: 'IWwBHWABMdiiwYNrAyTpjRqceIRM8wc-'
+      SERVERPOD_PASSWORD_emailSecretHashPepper: '9yHhgMKTXlf3efYdKOEyzpk50CSaVQnx'
 
     steps:
       - uses: actions/checkout@v4
