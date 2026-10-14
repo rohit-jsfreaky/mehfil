@@ -3,12 +3,12 @@
 **The wedding's disposable camera on every guest's phone. It keeps working with no signal, and the whole album opens
 for everyone the next morning.** A Flutter app powered by Serverpod.
 
-> After every Indian wedding, the best photos are stuck on 300 guests' phones. Mehfil collects them, even from the
+> After every Indian wedding, the best photos are stuck on the guests' phones. Mehfil collects them, even from the
 > basement hall with no signal, and reveals the album to everyone the next morning.
 
-- ▶ **Demo video (under 2 minutes):** — *TODO: YouTube link after upload*
+- ▶ **Demo video (1:35):** https://youtu.be/iJIaPt_x14k
 - 🌐 **Live app:** https://mehfil.serverpod.space (on Serverpod Cloud)
-- 📱 **Android app for hosts:** — *TODO: APK link (GitHub Release) before submitting*
+- 📱 **Android app for hosts:** [download the APK](https://github.com/rohit-jsfreaky/mehfil/releases/latest/download/mehfil-v1.0.apk) (GitHub Release)
 - 🔑 **Judges' host login:** `judges@example.com` / `mehfil-judge-2026`
 - 🧪 **Demo event code:** `DCPBDR`. It is labelled **demo**. Its photos are generated test images, not real people.
 
