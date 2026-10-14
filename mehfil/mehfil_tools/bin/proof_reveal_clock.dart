@@ -3,11 +3,17 @@
 //
 //   dart run mehfil_tools:proof_reveal_clock --server URL --email E --password P
 //
+// With --restart-note, the server is restarted by hand while this waits
+// (serverpod cloud deploy --redeploy); polling keeps going through the
+// restart, and the note is saved with the result. --photos DIR uploads the
+// .jpg files in DIR instead of generated test images.
+//
 // Creates a demo event whose roll reveals in --delay seconds, joins two guests,
 // uploads photos, then only watches: nobody presses "Reveal now". Writes the
 // result to evidence/proofs/.
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:args/args.dart';
 import 'package:mehfil_tools/mehfil_tools.dart';
@@ -19,6 +25,9 @@ Future<void> main(List<String> argv) async {
             ..addOption('log')
             ..addOption('delay', defaultsTo: '60')
             ..addOption('evidence', defaultsTo: '../../evidence/proofs')
+            ..addOption('name', defaultsTo: 'Proof (demo): reveal clock')
+            ..addOption('photos')
+            ..addOption('restart-note')
             ..addOption('email', defaultsTo: 'proof-host@mehfil.dev')
             ..addOption('password', defaultsTo: 'proof-host-password-1'))
           .parse(argv);
@@ -34,7 +43,7 @@ Future<void> main(List<String> argv) async {
   final serverNow = await host.guest.now();
   final revealAt = serverNow.add(Duration(seconds: int.parse(args['delay'])));
   final event = await host.events.createEvent(
-    'Proof (demo): reveal clock',
+    args['name'] as String,
     [RollDraft(name: 'Proof roll', revealAt: revealAt)],
     isDemo: true,
     hostedBy: null,
@@ -42,12 +51,24 @@ Future<void> main(List<String> argv) async {
   final rollId = event.rolls.single.id!;
   final code = event.event.joinCode;
 
+  final real = args['photos'] == null
+      ? <File>[]
+      : (Directory(args['photos'] as String)
+            .listSync()
+            .whereType<File>()
+            .where((f) => f.path.toLowerCase().endsWith('.jpg'))
+            .toList()
+          ..sort((a, b) => a.path.compareTo(b.path)));
   var photos = 0;
   for (final (i, name) in ['Bua', 'Chachu'].indexed) {
     final guest = connect(server);
     await joinAsGuest(guest, code, name);
     for (var n = 0; n < 2; n++) {
-      await uploadShot(guest, rollId: rollId, bytes: testJpeg(i * 10 + n));
+      final k = i * 2 + n;
+      final bytes = k < real.length
+          ? ByteData.sublistView(real[k].readAsBytesSync())
+          : testJpeg(i * 10 + n);
+      await uploadShot(guest, rollId: rollId, bytes: bytes);
       photos++;
     }
   }
@@ -66,9 +87,18 @@ Future<void> main(List<String> argv) async {
   final deadline = revealAt.add(const Duration(seconds: 120));
   List<RevealLog> reveals = [];
   WallSnapshot wall;
+  var unreachable = 0;
   while (true) {
-    wall = await host.wall.snapshot(code);
-    reveals = await host.events.reveals(event.event.id!);
+    try {
+      wall = await host.wall.snapshot(code);
+      reveals = await host.events.reveals(event.event.id!);
+    } catch (e) {
+      // The server is restarting: keep watching.
+      unreachable++;
+      stdout.writeln('server not answering (${e.runtimeType}), retrying');
+      await Future<void>.delayed(const Duration(seconds: 3));
+      continue;
+    }
     if (reveals.isNotEmpty || wall.serverNow.isAfter(deadline)) break;
     await Future<void>.delayed(const Duration(seconds: 3));
   }
@@ -109,6 +139,11 @@ Future<void> main(List<String> argv) async {
     ],
     'secondsAfterRevealTime': roll.revealedAt?.difference(revealAt).inSeconds,
     'checkedAt': wall.serverNow.toIso8601String(),
+    if (args['restart-note'] != null) 'restart': args['restart-note'],
+    'pollsWhileServerUnreachable': unreachable,
+    'photoSource': real.isEmpty
+        ? 'generated test images'
+        : 'frames from two phone clips',
   };
 
   final dir = Directory(args['evidence'] as String)

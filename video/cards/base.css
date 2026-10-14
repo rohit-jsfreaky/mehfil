@@ -1,0 +1,16 @@
+@font-face { font-family: Hanken; src: url(../fonts/HankenGrotesk.ttf); }
+@font-face { font-family: InstSerif; src: url(../fonts/InstrumentSerif.ttf); }
+@font-face { font-family: Mono; src: url(../fonts/JetBrainsMono.ttf); }
+* { margin: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; background: #fff; color: #0e0e12; font-family: Hanken; }
+body { padding: 140px 180px; display: flex; flex-direction: column; justify-content: center; }
+.word { font-weight: 700; font-size: 44px; letter-spacing: -1px; margin-bottom: 48px; }
+.serif { font-family: InstSerif; font-size: 112px; line-height: 1.05; letter-spacing: -1px; max-width: 1500px; }
+.sub { font-size: 38px; color: #5b5b66; margin-top: 36px; max-width: 1400px; line-height: 1.35; }
+.dot { color: #3d3dd8; }
+.rows { margin-top: 56px; border-top: 2px solid #ececf0; }
+.row { display: grid; grid-template-columns: 430px 1fr; padding: 26px 0; border-bottom: 2px solid #ececf0; font-size: 36px; }
+.row b { font-weight: 700; }
+.row span { color: #5b5b66; }
+.foot { margin-top: 48px; font-size: 32px; color: #5b5b66; }
+.mono { font-family: Mono; }

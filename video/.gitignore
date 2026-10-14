@@ -1,0 +1,12 @@
+node_modules/
+raw/
+feeds/
+photos/
+out/
+*.jpg
+voice/model/
+voice/takes/
+voice/__pycache__/
+voice/transcripts.json
+cards/*.png
+trial*.mjs

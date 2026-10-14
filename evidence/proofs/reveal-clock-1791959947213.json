@@ -1,0 +1,23 @@
+{
+  "claim": "With no client timer and no \"Reveal now\", the server opens the roll after its reveal time, once.",
+  "pass": true,
+  "server": "https://mehfil.api.serverpod.space/",
+  "eventId": 13,
+  "rollId": 15,
+  "revealAt": "2026-10-14T06:38:51.049910Z",
+  "photosUploaded": 4,
+  "uploadsDoneAt": "2026-10-14T06:35:29.420544Z",
+  "albumPhotos": 4,
+  "revealLog": [
+    {
+      "trigger": "clock",
+      "photos": 4,
+      "revealedAt": "2026-10-14T06:38:51.065982Z"
+    }
+  ],
+  "secondsAfterRevealTime": 0,
+  "checkedAt": "2026-10-14T06:39:09.459716Z",
+  "restart": "server restarted with: serverpod cloud deploy --redeploy (times in restart.json)",
+  "pollsWhileServerUnreachable": 0,
+  "photoSource": "frames from two phone clips"
+}

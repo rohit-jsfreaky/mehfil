@@ -1,0 +1,9 @@
+{
+  "name": "mehfil-video",
+  "private": true,
+  "description": "Records the demo video: real browsers driving the live Mehfil app.",
+  "type": "module",
+  "dependencies": {
+    "playwright": "1.63.0"
+  }
+}

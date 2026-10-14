@@ -1,0 +1,15 @@
+{
+  "claim": "The reveal time lives in the database, not in a timer. The live server was restarted after the event was created, and the album still opened by itself on time, once.",
+  "pass": true,
+  "server": "https://mehfil.api.serverpod.space/",
+  "event": "Restart test (demo), code 97ASQW, event 13, roll 15 (judges' demo account)",
+  "steps": [
+    "06:34:53 UTC (server log) - event created; reveal set for 06:38:51 UTC; 4 photos uploaded by 2 guests",
+    "restart requested with: serverpod cloud deploy --redeploy (laptop clock; see restart.json)",
+    "06:38:12 UTC (server log) - a new server process starts: 'Reveals: future calls are off here; the reveal clock opens rolls.'",
+    "06:38:51 UTC - roll 15 opens: trigger 'clock', 4 photos, 0 s after the reveal time; one reveal only"
+  ],
+  "result": "reveal-clock-1791959947213.json",
+  "serverLog": "video/raw/restart-20261014T120416/cloud-log.txt (not committed; the two lines are quoted above)",
+  "limits": "Serverpod Cloud rolls a new server in before the old one stops, and the reveal row does not record which server ran it. What this proves: a restart happened 39 s before the reveal time and the reveal still fired on time, from the database. The exactly-once reveal across a restart is also covered by the integration test 'when the reveal runs twice (schedule + host, or a restart)'."
+}

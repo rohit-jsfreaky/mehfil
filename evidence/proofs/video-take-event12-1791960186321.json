@@ -1,0 +1,28 @@
+{
+  "label": "video-take",
+  "note": "The demo video's take: guests Rohit (with signal) and Isha (no signal, tab closed, then back online), driven by Playwright on the live app; camera = two phone clips.",
+  "eventId": 12,
+  "rowsSynced": 7,
+  "filesReceived": 7,
+  "delivered": 7,
+  "rowsWithoutFile": 0,
+  "filesWithoutRow": 0,
+  "waitedOverMinute": 2,
+  "waitedOverMinuteNote": "server receivedAt minus the phone's own takenAt clock; > 60 s means it waited on the phone",
+  "longestWaitSeconds": 74,
+  "guests": [
+    {
+      "name": "Isha",
+      "rowsSynced": 4,
+      "filesReceived": 4,
+      "delivered": 4
+    },
+    {
+      "name": "Rohit",
+      "rowsSynced": 3,
+      "filesReceived": 3,
+      "delivered": 3
+    }
+  ],
+  "serverNow": "2026-10-14T06:43:06.321061Z"
+}

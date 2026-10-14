@@ -2,6 +2,11 @@
 // files, both) to evidence/. Every published delivery number comes from here.
 //
 //   dart run mehfil_tools:delivery_report --event 34 --label offline-browser-test
+//
+// Against the live server, with a real host's own account (the password is
+// asked for on screen, so it never lands in a file or the shell history):
+//
+//   dart run mehfil_tools:delivery_report --server https://mehfil.api.serverpod.space/ //     --email you@example.com --code ABC123 --label phone-test
 import 'dart:convert';
 import 'dart:io';
 
@@ -13,20 +18,18 @@ Future<void> main(List<String> argv) async {
       (ArgParser()
             ..addOption('server', defaultsTo: 'http://localhost:8080/')
             ..addOption('email', defaultsTo: 'proof-host@mehfil.dev')
-            ..addOption('password', defaultsTo: 'proof-host-password-1')
-            ..addOption('event', mandatory: true)
+            ..addOption('password')
+            ..addOption('event', help: 'The event id.')
+            ..addOption('code', help: 'Or the 6-letter join code.')
             ..addOption('label', defaultsTo: 'delivery')
             ..addOption('note', defaultsTo: '')
             ..addOption('evidence', defaultsTo: '../../evidence/proofs'))
           .parse(argv);
 
+  final email = args['email'] as String;
   final host = connect(args['server'] as String);
-  await signInHost(
-    host,
-    email: args['email'] as String,
-    password: args['password'] as String,
-  );
-  final r = await host.events.delivery(int.parse(args['event'] as String));
+  await signInHost(host, email: email, password: _password(args, email));
+  final r = await host.events.delivery(await _eventId(host, args));
   final result = {
     'label': args['label'],
     'note': args['note'],
@@ -62,4 +65,38 @@ Future<void> main(List<String> argv) async {
     'rowsOnly=${r.rowsWithoutFile} filesOnly=${r.filesWithoutRow} → ${out.path}',
   );
   exit(0);
+}
+
+String _password(ArgResults args, String email) {
+  final given =
+      args['password'] as String? ??
+      Platform.environment['MEHFIL_HOST_PASSWORD'];
+  if (given != null && given.isNotEmpty) return given;
+  if (email == 'proof-host@mehfil.dev') return 'proof-host-password-1';
+  stdout.write('Password for $email: ');
+  final hide = stdin.hasTerminal;
+  if (hide) stdin.echoMode = false;
+  try {
+    return stdin.readLineSync()?.trim() ?? '';
+  } finally {
+    if (hide) {
+      stdin.echoMode = true;
+      stdout.writeln();
+    }
+  }
+}
+
+Future<int> _eventId(Client host, ArgResults args) async {
+  final id = args['event'] as String?;
+  if (id != null) return int.parse(id);
+  final code = (args['code'] as String?)?.trim().toUpperCase();
+  if (code == null || code.isEmpty) {
+    stderr.writeln('Give --event <id> or --code <join code>.');
+    exit(64);
+  }
+  for (final e in await host.events.myEvents()) {
+    if (e.event.joinCode.toUpperCase() == code) return e.event.id!;
+  }
+  stderr.writeln('No event with code $code on this host account.');
+  exit(66);
 }

@@ -48,7 +48,10 @@ You need a phone and a laptop. No app, no sign-up.
 | Photos sent the real way arrive whole | Judges' demo event: 7 demo guests sent 16 photos (row through offline sync, file through upload). 16 rows, 16 files, 16 delivered | [`judges-demo-seed-event8-1791909132472.json`](evidence/proofs/judges-demo-seed-event8-1791909132472.json) |
 | The guest page opens fast | First visit, no cache: 9.3 s to the first frame right after a deploy (cold CDN), **1.24 s** once the CDN is warm. The Flutter engine file went from 5.4 MB to 2.1 MB after we gzipped it | [`first-load-1791906760000.json`](evidence/proofs/first-load-1791906760000.json) |
 | Server tests | 25 integration tests pass, on the laptop and on GitHub Actions | [`mehfil_server/test/integration/mehfil_flow_test.dart`](mehfil/mehfil_server/test/integration/mehfil_flow_test.dart), [Tests workflow](.github/workflows/tests.yml) |
-| Used at a real gathering | — *TODO: after Wednesday's gathering (14 Oct): guests, photos, photos taken with no signal, photos lost* | — *TODO: `evidence/` file* |
+| On Cloud, the reveal still fires after the live server restarts | Event made, then the live server restarted (`serverpod cloud deploy --redeploy`). A new server process started 39 s before the reveal time; the album opened 0 s after its time, by the server, with all 4 photos. (Cloud rolls the new server in before the old one stops, and the reveal row doesn't record which one ran it.) | [`restart-reveal-1791959947213.json`](evidence/proofs/restart-reveal-1791959947213.json), [`reveal-clock-1791959947213.json`](evidence/proofs/reveal-clock-1791959947213.json) |
+| The video's take is real | The demo video was recorded on the live app: two guests, one with no signal who closed the tab and came back. 7 photos taken, 7 rows and 7 files on the server, 0 lost; the longest wait on the "phone" was 74 s | [`video-take-event12-1791960186321.json`](evidence/proofs/video-take-event12-1791960186321.json) |
+| Reopens with no internet | A guest who joined once reloads, or opens the link in a new tab, with no internet: the app opens from the phone (no browser error page), with the camera, shot count and waiting photos. A guest who hasn't joined yet sees "Get signal once to join", and the page carries on by itself when signal returns | [`offline-reload-1791917657000.json`](evidence/proofs/offline-reload-1791917657000.json) (5 screenshots) |
+| Works on real phones | Rohit and a second person tested the live app on two real phones, including airplane mode and closing the tab; the photos sent when the signal came back. (No large gathering was run, so we publish no gathering numbers.) | tested by hand, 13 to 14 Oct |
 
 We also kept one failed run on purpose:
 [`reveal-clock-1791904302862.FAILED-upload-overlap.json`](evidence/proofs/reveal-clock-1791904302862.FAILED-upload-overlap.json).
@@ -193,7 +196,11 @@ for good, a hand-written `.scloudignore` breaks Cloud builds, future calls throw
 
 ## Honesty notes
 
-- The demo event and every event used in the proofs are labelled **demo**. Their photos are generated test images.
+- The demo event and every event used in the proofs are labelled **demo**. Their photos are generated test images,
+  except the video's take and the restart proof, whose photos are frames from two short clips filmed on Rohit's phone.
+- The demo video was recorded by a script (Playwright) driving the real live app in phone-size browser windows; each
+  guest's camera was fed one of those phone clips, and "no signal" was the browser's offline switch for that one
+  window. Sped-up parts say so on screen. Rohit separately tested the same live app on real phones.
 - "Taken at" comes from the phone's clock, so the app shows it as the phone's claim. Received time, counts and the
   reveal use server time only.
 - The live app is on the free Starter plan, so its reveals come from the reveal clock, not a future call. The future
@@ -205,5 +212,5 @@ for good, a hand-written `.scloudignore` breaks Cloud builds, future calls throw
 ## AI use
 
 Built with AI help, as the hackathon rules ask us to say. **Claude Code (Anthropic) wrote most of the code**, the
-tests and the docs. Rohit Kashyap made the product decisions, reviewed the work, tested it on real phones, ran the
-real gathering, and did all the git work.
+tests and the docs. Rohit Kashyap made the product decisions, reviewed the work, tested it on real phones, and did all the
+git work.
